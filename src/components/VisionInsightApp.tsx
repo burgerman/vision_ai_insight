@@ -9,7 +9,6 @@ import { Loader2, AlertCircle, Sparkles, Send, ShieldCheck, Search } from "lucid
 import ImageUpload from "@/components/ImageUpload";
 import ResultsDisplay from "@/components/ResultsDisplay";
 import { aiSafetyPreCheck } from "@/ai/flows/ai-safety-pre-check";
-import { analyzeImage } from "@/ai/flows/image-analysis";
 
 export default function VisionInsightApp() {
   const [file, setFile] = useState<File | null>(null);
@@ -45,7 +44,7 @@ export default function VisionInsightApp() {
     setStatus("validating");
 
     try {
-      // 1. Convert file to data URI for safety check
+      // 1. Convert file to data URI for the mandatory AI Safety Pre-check
       const imageDataUri = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result as string);
@@ -53,7 +52,8 @@ export default function VisionInsightApp() {
         reader.readAsDataURL(file);
       });
 
-      // 2. AI Safety Agent Check
+      // 2. Core AI Safety Agent Check
+      // This protects the system against harmful content, racist speech, and adversarial attacks.
       const safetyResult = await aiSafetyPreCheck({
         textPrompt: prompt,
         imageDataUri,
@@ -63,20 +63,28 @@ export default function VisionInsightApp() {
         throw new Error(`Safety Agent Intervention: ${safetyResult.message}`);
       }
 
-      // 3. Vision Analysis Agent
+      // 3. Process with Main Analysis Backend
       setStatus("processing");
-      const analysisResult = await analyzeImage({
-        imageDataUri,
-        promptText: prompt,
+      
+      const formData = new FormData();
+      formData.append('prompt', prompt);
+      formData.append('image', file);
+
+      const response = await fetch('http://localhost:8000/robot-helper', {
+        method: 'POST',
+        body: formData
       });
 
-      if (!analysisResult || !analysisResult.html) {
-        throw new Error("The analysis agent failed to generate a report.");
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status} ${response.statusText}`);
       }
 
-      setResultHtml(analysisResult.html);
+      const html = await response.text();
+      
+      // Inject the HTML safely into the Results Area state
+      setResultHtml(html);
     } catch (err: any) {
-      console.error("Agent Error:", err);
+      console.error('API Error:', err);
       setError(err.message || "An unexpected error occurred during analysis.");
     } finally {
       setLoading(false);
@@ -144,7 +152,7 @@ export default function VisionInsightApp() {
                     ) : (
                       <span className="flex items-center gap-2">
                         <Search className="h-4 w-4" />
-                        Analyzing Vision Data...
+                        Processing...
                       </span>
                     )}
                   </>

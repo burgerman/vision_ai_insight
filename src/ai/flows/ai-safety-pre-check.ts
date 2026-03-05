@@ -86,7 +86,7 @@ const aiSafetyPreCheckFlow = ai.defineFlow(
   async input => {
     const {output} = await ai.generate({
       prompt: safetyPrompt,
-      model: googleAI.model('gemini-1.5-flash'),
+      model: googleAI.model('gemini-2.5-flash'),
       input: {
         textPrompt: input.textPrompt,
         imageDataUri: input.imageDataUri,
