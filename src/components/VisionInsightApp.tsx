@@ -60,6 +60,7 @@ export default function VisionInsightApp() {
       });
 
       if (!safetyResult.isSafe) {
+        // Clear status and stop if safety check fails
         throw new Error(`Safety Agent Intervention: ${safetyResult.message}`);
       }
 
@@ -76,7 +77,7 @@ export default function VisionInsightApp() {
       });
 
       if (!response.ok) {
-        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        throw new Error(`Main Analysis API Error: ${response.status} ${response.statusText}`);
       }
 
       const html = await response.text();
@@ -84,7 +85,8 @@ export default function VisionInsightApp() {
       // Inject the HTML safely into the Results Area state
       setResultHtml(html);
     } catch (err: any) {
-      console.error('API Error:', err);
+      console.error('System Error:', err);
+      // Display a clear, styled alert message instead of crashing
       setError(err.message || "An unexpected error occurred during analysis.");
     } finally {
       setLoading(false);
@@ -165,10 +167,12 @@ export default function VisionInsightApp() {
               </Button>
 
               {error && (
-                <Alert variant="destructive" className="animate-in slide-in-from-top-2 duration-300">
+                <Alert variant="destructive" className="animate-in slide-in-from-top-2 duration-300 w-full">
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle>System Alert</AlertTitle>
-                  <AlertDescription>{error}</AlertDescription>
+                  <AlertDescription className="text-sm font-medium">
+                    {error}
+                  </AlertDescription>
                 </Alert>
               )}
             </div>
