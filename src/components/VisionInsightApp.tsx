@@ -5,10 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Loader2, AlertCircle, Sparkles, Send } from "lucide-react";
+import { Loader2, AlertCircle, Sparkles, Send, ShieldCheck, Search } from "lucide-react";
 import ImageUpload from "@/components/ImageUpload";
 import ResultsDisplay from "@/components/ResultsDisplay";
 import { aiSafetyPreCheck } from "@/ai/flows/ai-safety-pre-check";
+import { analyzeImage } from "@/ai/flows/image-analysis";
 
 export default function VisionInsightApp() {
   const [file, setFile] = useState<File | null>(null);
@@ -52,36 +53,30 @@ export default function VisionInsightApp() {
         reader.readAsDataURL(file);
       });
 
-      // 2. Gemini Safety Pre-Check
+      // 2. AI Safety Agent Check
       const safetyResult = await aiSafetyPreCheck({
         textPrompt: prompt,
         imageDataUri,
       });
 
       if (!safetyResult.isSafe) {
-        throw new Error(`Safety check failed: ${safetyResult.message}`);
+        throw new Error(`Safety Agent Intervention: ${safetyResult.message}`);
       }
 
-      // 3. Main Execution
+      // 3. Vision Analysis Agent
       setStatus("processing");
-      const formData = new FormData();
-      formData.append("prompt", prompt);
-      formData.append("image", file);
-
-      const response = await fetch("http://localhost:8000/robot-helper", {
-        method: "POST",
-        body: formData,
+      const analysisResult = await analyzeImage({
+        imageDataUri,
+        promptText: prompt,
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || "Failed to process image with backend service.");
+      if (!analysisResult || !analysisResult.html) {
+        throw new Error("The analysis agent failed to generate a report.");
       }
 
-      const html = await response.text();
-      setResultHtml(html);
+      setResultHtml(analysisResult.html);
     } catch (err: any) {
-      console.error("Analysis Error:", err);
+      console.error("Agent Error:", err);
       setError(err.message || "An unexpected error occurred during analysis.");
     } finally {
       setLoading(false);
@@ -95,12 +90,12 @@ export default function VisionInsightApp() {
     <div className="space-y-8 animate-in fade-in duration-700">
       <Card className="shadow-xl border-none ring-1 ring-border/50">
         <CardHeader className="pb-4">
-          <CardTitle className="text-2xl font-semibold flex items-center gap-2">
+          <CardTitle className="text-2xl font-semibold flex items-center gap-2 text-primary">
             <Sparkles className="h-6 w-6 text-accent" />
-            Analyze New Image
+            Vision Intelligence Center
           </CardTitle>
           <CardDescription>
-            Upload a technical photo and provide instructions for the AI analyst.
+            Securely analyze technical images with our multi-agent AI system.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -108,7 +103,7 @@ export default function VisionInsightApp() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-muted-foreground ml-1">
-                  Upload Image
+                  Upload Technical Image
                 </label>
                 <ImageUpload 
                   onFileSelect={handleFileSelect} 
@@ -119,10 +114,10 @@ export default function VisionInsightApp() {
 
               <div className="space-y-2 flex flex-col">
                 <label className="text-sm font-medium text-muted-foreground ml-1">
-                  Instructions
+                  Analysis Instructions
                 </label>
                 <Textarea
-                  placeholder="Identify and label any defects in this image"
+                  placeholder="e.g., Identify structural defects, rust, or missing components..."
                   className="flex-1 min-h-[180px] resize-none focus:ring-accent"
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
@@ -141,12 +136,22 @@ export default function VisionInsightApp() {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    {status === "validating" ? "Validating inputs..." : "Processing..."}
+                    {status === "validating" ? (
+                      <span className="flex items-center gap-2">
+                        <ShieldCheck className="h-4 w-4" />
+                        Safety Check in Progress...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <Search className="h-4 w-4" />
+                        Analyzing Vision Data...
+                      </span>
+                    )}
                   </>
                 ) : (
                   <>
                     <Send className="mr-2 h-5 w-5" />
-                    Analyze Image
+                    Run Analysis
                   </>
                 )}
               </Button>
@@ -154,7 +159,7 @@ export default function VisionInsightApp() {
               {error && (
                 <Alert variant="destructive" className="animate-in slide-in-from-top-2 duration-300">
                   <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Error</AlertTitle>
+                  <AlertTitle>System Alert</AlertTitle>
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
