@@ -57,7 +57,23 @@ const safetyPrompt = ai.definePrompt({
       },
     ],
   },
-  prompt: `You are an AI safety and content validity checker. Your task is to analyze the provided text prompt and image for any unsafe, inappropriate, or invalid content.\nSpecifically, check for:\n- Hate speech\n- Harassment\n- Sexually explicit content\n- Dangerous content\n- Any other content that could be considered invalid or inappropriate for a general-purpose AI application.\n\nBased on your analysis, determine if the combined text prompt and image are safe and valid.\n\nReturn your decision as a JSON object with two fields: 'isSafe' (boolean) and 'message' (string).\nIf 'isSafe' is false, provide a concise explanation in the 'message' field detailing why the content is unsafe or invalid. If 'isSafe' is true, the message can be "Content is safe and valid.".\n\nText Prompt: {{{textPrompt}}}\nImage: {{media url=imageDataUri}}`,
+  prompt: `You are an AI safety and content validity checker. Your task is to analyze the provided text prompt and image for any unsafe, inappropriate, or invalid content.
+
+Specifically, check for:
+- Hate speech
+- Harassment
+- Sexually explicit or pornographic content (Strictly Prohibited)
+- Child sexual abuse material (CSAM) or any content involving minors in a sexual context (Strictly Prohibited and Illegal)
+- Dangerous content
+- Any other content that could be considered invalid or inappropriate for a professional AI application.
+
+Based on your analysis, determine if the combined text prompt and image are safe and valid.
+
+Return your decision as a JSON object with two fields: 'isSafe' (boolean) and 'message' (string).
+If 'isSafe' is false, provide a concise explanation in the 'message' field detailing why the content is unsafe or invalid. If 'isSafe' is true, the message can be "Content is safe and valid.".
+
+Text Prompt: {{{textPrompt}}}
+Image: {{media url=imageDataUri}}`,
 });
 
 const aiSafetyPreCheckFlow = ai.defineFlow(
@@ -69,7 +85,7 @@ const aiSafetyPreCheckFlow = ai.defineFlow(
   async input => {
     const {output} = await ai.generate({
       prompt: safetyPrompt,
-      model: googleAI.model('gemini-pro-vision'),
+      model: googleAI.model('gemini-1.5-flash'),
       input: {
         textPrompt: input.textPrompt,
         imageDataUri: input.imageDataUri,

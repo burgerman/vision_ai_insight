@@ -6,7 +6,7 @@ export default function Home() {
       <div className="w-full max-w-4xl">
         <div className="text-center mb-10 space-y-2">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-primary">
-            Vision Insight
+            Vision AI Insight
           </h1>
           <p className="text-muted-foreground text-lg">
             Intelligent image analysis and defect detection
