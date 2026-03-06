@@ -70,5 +70,3 @@ The application features a mandatory **AI Safety Pre-check** flow. No data is se
 5. **Rendering**: The resulting HTML report is sanitized and rendered with a CSS-based labeling overlay.
 
 ---
-
-Built with ❤️ in Firebase Studio.
