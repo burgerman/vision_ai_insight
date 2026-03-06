@@ -8,7 +8,7 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Loader2, AlertCircle, Sparkles, Send, ShieldCheck, Search } from "lucide-react";
 import ImageUpload from "@/components/ImageUpload";
 import ResultsDisplay from "@/components/ResultsDisplay";
-import { aiSafetyPreCheck } from "@/ai/flows/ai-safety-pre-check";
+import { analyzeImage } from "@/ai/flows/image-analysis";
 
 export default function VisionInsightApp() {
   const [file, setFile] = useState<File | null>(null);
@@ -41,10 +41,10 @@ export default function VisionInsightApp() {
     setLoading(true);
     setResultHtml(null);
     setError(null);
-    setStatus("validating");
+    setStatus("processing");
 
     try {
-      // 1. Convert file to data URI for the mandatory AI Safety Pre-check
+      // 1. Convert file to data URI
       const imageDataUri = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result as string);
@@ -52,41 +52,20 @@ export default function VisionInsightApp() {
         reader.readAsDataURL(file);
       });
 
-      // 2. Core AI Safety Agent Check
-      // This protects the system against harmful content, racist speech, and adversarial attacks.
-      const safetyResult = await aiSafetyPreCheck({
-        textPrompt: prompt,
+      // 2. Core AI Analysis with integrated safety
+      const result = await analyzeImage({
+        promptText: prompt,
         imageDataUri,
       });
 
-      if (!safetyResult.isSafe) {
-        // Clear status and stop if safety check fails
-        throw new Error(`Safety Agent Intervention: ${safetyResult.message}`);
+      if (result.isSafe === false) {
+        setResultHtml(result.html);
+        setError(`Safety Intervention: ${result.safetyMessage}`);
+      } else {
+        setResultHtml(result.html);
       }
-
-      // 3. Process with Main Analysis Backend
-      setStatus("processing");
-      
-      const formData = new FormData();
-      formData.append('prompt', prompt);
-      formData.append('image', file);
-
-      const response = await fetch('http://localhost:8000/robot-helper', {
-        method: 'POST',
-        body: formData
-      });
-
-      if (!response.ok) {
-        throw new Error(`Main Analysis API Error: ${response.status} ${response.statusText}`);
-      }
-
-      const html = await response.text();
-      
-      // Inject the HTML safely into the Results Area state
-      setResultHtml(html);
     } catch (err: any) {
       console.error('System Error:', err);
-      // Display a clear, styled alert message instead of crashing
       setError(err.message || "An unexpected error occurred during analysis.");
     } finally {
       setLoading(false);
@@ -149,7 +128,7 @@ export default function VisionInsightApp() {
                     {status === "validating" ? (
                       <span className="flex items-center gap-2">
                         <ShieldCheck className="h-4 w-4" />
-                        Safety Check in Progress...
+                        Validating inputs...
                       </span>
                     ) : (
                       <span className="flex items-center gap-2">

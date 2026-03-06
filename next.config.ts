@@ -30,8 +30,16 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // In Next.js 15, serverActions is a top-level property,
+  // but some features or specific versions might still require it under experimental.
+  // We'll set it here to 20mb to provide ample overhead for base64 encoded images.
   serverActions: {
-    bodySizeLimit: '10mb',
+    bodySizeLimit: '20mb',
+  },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '20mb',
+    },
   },
 };
 

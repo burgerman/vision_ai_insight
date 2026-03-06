@@ -1,14 +1,28 @@
 "use client";
 
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import DOMPurify from "dompurify";
 
 interface ResultsDisplayProps {
   html: string;
 }
 
 export default function ResultsDisplay({ html }: ResultsDisplayProps) {
+  // Sanitize HTML to prevent XSS attacks while allowing safe technical reporting tags
+  const sanitizedHtml = useMemo(() => {
+    if (typeof window === "undefined") return html;
+    return DOMPurify.sanitize(html, {
+      ALLOWED_TAGS: [
+        'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'ul', 'ol', 'li', 
+        'table', 'thead', 'tbody', 'tr', 'th', 'td', 'strong', 'em', 'code', 'hr'
+      ],
+      ALLOWED_ATTR: ['class']
+    });
+  }, [html]);
+
   const handleDownload = () => {
     const blob = new Blob([html], { type: "text/html" });
     const url = URL.createObjectURL(blob);
@@ -51,7 +65,7 @@ export default function ResultsDisplay({ html }: ResultsDisplayProps) {
               [&_code]:bg-muted [&_code]:px-1 [&_code]:rounded [&_code]:text-accent
               [&_hr]:my-8 [&_hr]:border-t
             "
-            dangerouslySetInnerHTML={{ __html: html }}
+            dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
           />
         </div>
       </CardContent>
