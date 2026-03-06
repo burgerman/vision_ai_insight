@@ -6,9 +6,19 @@ Vision AI Insight is a high-security, intelligent image analysis platform built 
 
 - **Multi-Agent AI Workflow**: Implements a dedicated AI Safety Agent that pre-screens all requests before they reach the analysis engine.
 - **Intelligent Technical Analysis**: Analyzes images for defects, structural issues, or specific user-defined technical criteria.
+- **Visual Image Labeling**: Automatically detects and labels objects directly on the technical image using a CSS-based overlay system.
 - **Robust Safety Guardrails**: Hardened against adversarial attacks, including prompt injection and jailbreaking.
-- **Rich HTML Reporting**: Generates detailed, well-formatted analysis reports directly in the browser.
-- **Export Capabilities**: Export analysis results to standalone HTML files for documentation.
+- **Rich HTML Reporting**: Generates detailed, well-formatted analysis reports directly in the browser with interactive-style visualizations.
+
+## 🎬 Demo
+
+### 1. Analysis Request
+Upload a technical image and provide specific instructions for the AI to follow.
+![Sample Input](./demo/sample_inputs.png)
+
+### 2. Analysis Report
+The AI generates a comprehensive report with visual markers and labels placed directly on the original image.
+![Sample Output](./demo/sample_output.png)
 
 ## 🛡️ AI Safety Agent (Core)
 
@@ -25,7 +35,7 @@ The application features a mandatory **AI Safety Pre-check** flow. No data is se
 - **AI Orchestration**: [Google Genkit](https://github.com/firebase/genkit)
 - **UI Components**: [Shadcn UI](https://ui.shadcn.com/) & [Tailwind CSS](https://tailwindcss.com/)
 - **Icons**: [Lucide React](https://lucide.dev/)
-- **LLM Model**: Gemini 2.5 Flash
+- **LLM Model**: Gemini 2.0 Flash
 
 ## 🚦 Getting Started
 
@@ -55,8 +65,9 @@ The application features a mandatory **AI Safety Pre-check** flow. No data is se
 
 1. **User Input**: User uploads a technical image and provides analysis instructions.
 2. **Safety Agent (Local)**: A Genkit flow (`aiSafetyPreCheck`) analyzes both the prompt and the image for safety violations.
-3. **External Analysis**: If safe, the frontend constructs a `FormData` object and sends it to the local analysis backend.
-4. **Rendering**: The resulting HTML report is safely injected into the results area.
+3. **External Analysis**: If safe, the frontend sends the request to the local analysis backend.
+4. **Data Extraction**: The system extracts base64 images and detection coordinates from the backend's HTML/JSON response.
+5. **Rendering**: The resulting HTML report is sanitized and rendered with a CSS-based labeling overlay.
 
 ---
 
